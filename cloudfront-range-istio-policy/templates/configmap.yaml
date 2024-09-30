@@ -29,7 +29,7 @@ data:
       rules:
       - from:
         - source:
-            ipBlocks:
+            remoteIpBlocks:
     $cloudfront_ips
     EOF
     )

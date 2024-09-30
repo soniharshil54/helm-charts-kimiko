@@ -7,5 +7,4 @@ spec:
   rules:
   - from:
     - source:
-        ipBlocks:
-          - 0.0.0.0/0  # Placeholder IP range, updated by CronJob
+        remoteIpBlocks: []

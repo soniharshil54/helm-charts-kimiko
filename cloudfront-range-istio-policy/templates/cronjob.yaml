@@ -18,17 +18,17 @@ spec:
                 apt-get update && apt-get install -y jq curl
                 cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | join("\n")')
                 kubectl apply -f - <<EOF
-                apiVersion: security.istio.io/v1beta1
-                kind: AuthorizationPolicy
-                metadata:
-                  name: {{ .Release.Name }}-cloudfront-authpolicy
-                  namespace: {{ .Values.namespace }}
-                spec:
-                  rules:
-                  - from:
-                    - source:
-                        ipBlocks:
-$(echo "$cloudfront_ips" | sed 's/^/                          - /')
-                EOF
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ .Release.Name }}-cloudfront-authpolicy
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - from:
+    - source:
+        ipBlocks:
+$(echo "$cloudfront_ips" | sed 's/^/          - /')
+EOF
           restartPolicy: OnFailure
       restartPolicy: OnFailure

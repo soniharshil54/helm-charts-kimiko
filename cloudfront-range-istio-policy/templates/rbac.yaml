@@ -1,0 +1,24 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: istio-auth-policy-manager
+  namespace: {{ .Values.namespace }}  # Use the namespace value from values.yaml
+rules:
+- apiGroups: ["security.istio.io"]
+  resources: ["authorizationpolicies"]
+  verbs: ["get", "list", "watch", "create", "update", "delete", "patch"]  # Added 'patch' verb to allow patching existing resources
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: istio-auth-policy-binding
+  namespace: {{ .Values.namespace }}  # Use the namespace value from values.yaml
+subjects:
+- kind: ServiceAccount
+  name: default  # Bind the default service account used by the CronJob
+  namespace: {{ .Values.namespace }}
+roleRef:
+  kind: Role
+  name: istio-auth-policy-manager
+  apiGroup: rbac.authorization.k8s.io

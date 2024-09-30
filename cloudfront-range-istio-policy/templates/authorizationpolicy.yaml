@@ -1,0 +1,11 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: {{ .Release.Name }}-cloudfront-authpolicy
+  namespace: {{ .Values.namespace }}
+spec:
+  rules:
+  - from:
+    - source:
+        ipBlocks:
+          - 0.0.0.0/0  # Placeholder IP range, updated by CronJob

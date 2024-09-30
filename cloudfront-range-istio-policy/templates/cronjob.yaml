@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ .Release.Name }}-update-cloudfront-ips
+  namespace: {{ .Values.namespace }}
+spec:
+  schedule: "{{ .Values.cronSchedule }}"  # Runs every minute
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          securityContext:
+            runAsUser: 0  # Run the pod as root
+          containers:
+          - name: update-cloudfront-ips
+            image: bitnami/kubectl:latest  # Use bitnami/kubectl, which already has kubectl
+            command: ["/bin/sh", "-c"]
+            args:
+              - |
+                apt-get update && apt-get install -y jq curl
+                cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | join("\n")')
+                ip_array=$(echo "$cloudfront_ips" | awk '{print "\""$0"\","}')
+                ip_blocks="[${ip_array%?}]"  # Format it properly for YAML
+                mkdir -p /tmp/istio
+                cat <<EOF > /tmp/istio/cloudfront-authpolicy.yaml
+                apiVersion: security.istio.io/v1beta1
+                kind: AuthorizationPolicy
+                metadata:
+                  name: {{ .Release.Name }}-cloudfront-authpolicy
+                  namespace: {{ .Values.namespace }}
+                spec:
+                  rules:
+                  - from:
+                    - source:
+                        ipBlocks: $ip_blocks
+                EOF
+                kubectl apply -f /tmp/istio/cloudfront-authpolicy.yaml
+          restartPolicy: OnFailure
+      restartPolicy: OnFailure

@@ -28,9 +28,7 @@ spec:
   - from:
     - source:
         ipBlocks:
-{{ range $ip := (splitList "\n" (printf "%s" $cloudfront_ips)) }}
-          - {{ $ip }}
-{{ end }}
+$(echo "$cloudfront_ips" | sed 's/^/          - /')
 EOF
           restartPolicy: OnFailure
       restartPolicy: OnFailure

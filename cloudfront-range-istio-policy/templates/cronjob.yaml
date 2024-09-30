@@ -15,10 +15,9 @@ spec:
               command: ["/bin/sh", "-c"]
               args:
                 - |
-                  apt-get update && apt-get install -y jq curl
-                  cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | join("\n")')
-                  formatted_ips=$(echo "$cloudfront_ips" | awk '{print "- "$0}')
-                  cat <<EOF | kubectl apply -f -
+                  apt-get update && apt-get install -y jq curl;
+                  cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST[]');
+                  kubectl apply -f - <<EOF
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
@@ -29,7 +28,7 @@ spec:
   - from:
     - source:
         ipBlocks:
-$formatted_ips
+$(for ip in $cloudfront_ips; do echo "          - $ip"; done)
 EOF
           restartPolicy: OnFailure
       restartPolicy: OnFailure

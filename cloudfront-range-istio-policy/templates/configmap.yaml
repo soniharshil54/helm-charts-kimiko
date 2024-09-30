@@ -26,6 +26,7 @@ data:
       name: {{ .Release.Name }}-cloudfront-authpolicy
       namespace: {{ .Values.namespace }}
     spec:
+      action: ALLOW
       rules:
       - from:
         - source:

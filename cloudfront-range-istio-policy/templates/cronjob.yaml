@@ -12,24 +12,14 @@ spec:
           containers:
             - name: update-cloudfront-ips
               image: bitnami/kubectl:latest
-              command: ["/bin/sh", "-c"]
-              args:
-                - |
-                  apt-get update && apt-get install -y jq curl;
-                  ip_list=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | map("- " + .) | join("\n")');
-                  export IP_BLOCKS="$ip_list";
-                  kubectl apply -f - <<EOF
-apiVersion: security.istio.io/v1beta1
-kind: AuthorizationPolicy
-metadata:
-  name: {{ .Release.Name }}-cloudfront-authpolicy
-  namespace: {{ .Values.namespace }}
-spec:
-  rules:
-  - from:
-    - source:
-        ipBlocks:
-$IP_BLOCKS
-EOF
+              command: ["/bin/sh", "/scripts/update-cloudfront-ips.sh"]
+              volumeMounts:
+                - name: script-volume
+                  mountPath: /scripts
+                  readOnly: true
           restartPolicy: OnFailure
+          volumes:
+            - name: script-volume
+              configMap:
+                name: {{ .Release.Name }}-update-script
       restartPolicy: OnFailure

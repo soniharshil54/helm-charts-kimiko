@@ -7,7 +7,11 @@ data:
   update-cloudfront-ips.sh: |
     #!/bin/sh
     apt-get update && apt-get install -y jq curl
+
+    # Fetch CloudFront IPs and store them as a YAML-formatted list
     cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | map("- " + .) | join("\n")')
+
+    # Apply the AuthorizationPolicy with the fetched IPs
     cat <<EOF | kubectl apply -f -
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy

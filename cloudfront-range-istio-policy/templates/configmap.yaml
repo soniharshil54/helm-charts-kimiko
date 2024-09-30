@@ -5,12 +5,21 @@ metadata:
   namespace: {{ .Values.namespace }}
 data:
   update-cloudfront-ips.sh: |
+    #!/bin/sh
 
-    # Fetch CloudFront IPs and store them as a YAML-formatted list
-    cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | map("- " + .) | join("\n")')
+    set -e  # Exit immediately if a command exits with a non-zero status
 
-    # Apply the AuthorizationPolicy with the fetched IPs
-    cat <<EOF | kubectl apply -f -
+    # Fetch CloudFront IPs and store them as a YAML-formatted list with proper indentation
+    cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | map("          - " + .) | join("\n")')
+
+    # Check if cloudfront_ips is empty
+    if [ -z "$cloudfront_ips" ]; then
+      echo "Error: Failed to fetch CloudFront IPs."
+      exit 1
+    fi
+
+    # Build the AuthorizationPolicy YAML
+    policy_yaml=$(cat <<EOF
     apiVersion: security.istio.io/v1beta1
     kind: AuthorizationPolicy
     metadata:
@@ -21,5 +30,13 @@ data:
       - from:
         - source:
             ipBlocks:
-              $cloudfront_ips
+    $cloudfront_ips
     EOF
+    )
+
+    # Output the generated YAML for debugging
+    echo "Generated AuthorizationPolicy YAML:"
+    echo "$policy_yaml"
+
+    # Apply the AuthorizationPolicy
+    echo "$policy_yaml" | kubectl apply -f -

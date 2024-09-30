@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: update-cloudfront-ips
-              image: bitnami/kubectl:latest
+              image: dtzar/helm-kubectl:latest
               command: ["/bin/sh", "/scripts/update-cloudfront-ips.sh"]
               volumeMounts:
                 - name: script-volume

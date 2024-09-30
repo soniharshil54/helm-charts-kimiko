@@ -11,13 +11,14 @@ spec:
         spec:
           containers:
             - name: update-cloudfront-ips
-              image: bitnami/kubectl:latest
+              image: bitnami/kubectl:latest  # Use bitnami/kubectl image
               command: ["/bin/sh", "-c"]
               args:
                 - |
                   apt-get update && apt-get install -y jq curl
-                  cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | join(" ")')
-                  kubectl apply -f - <<EOF
+                  cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | join("\n")')
+                  formatted_ips=$(echo "$cloudfront_ips" | awk '{print "- "$0}')
+                  cat <<EOF | kubectl apply -f -
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
@@ -28,7 +29,7 @@ spec:
   - from:
     - source:
         ipBlocks:
-$(for ip in $cloudfront_ips; do echo "          - $ip"; done)
+$formatted_ips
 EOF
           restartPolicy: OnFailure
       restartPolicy: OnFailure

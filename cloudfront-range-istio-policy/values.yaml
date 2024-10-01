@@ -1,3 +1,8 @@
-namespace: default
+namespace: istio-system
 cronSchedule: "* * * * *"  # Runs every day at midnight
 cloudfrontIpUrl: "https://d7uri8nf7uskq.cloudfront.net/tools/list-cloudfront-ips"
+cloudfrontIpField: "CLOUDFRONT_GLOBAL_IP_LIST"
+policyAction: "ALLOW"
+image:
+  repository: dtzar/helm-kubectl
+  tag: latest

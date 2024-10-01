@@ -10,7 +10,7 @@ data:
     set -e  # Exit immediately if a command exits with a non-zero status
 
     # Fetch CloudFront IPs and store them as a YAML-formatted list with proper indentation
-    cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.CLOUDFRONT_GLOBAL_IP_LIST | map("          - " + .) | join("\n")')
+    cloudfront_ips=$(curl -s {{ .Values.cloudfrontIpUrl }} | jq -r '.{{ .Values.cloudfrontIpField }} | map("          - " + .) | join("\n")')
 
     # Check if cloudfront_ips is empty
     if [ -z "$cloudfront_ips" ]; then
@@ -26,7 +26,7 @@ data:
       name: {{ .Release.Name }}-cloudfront-authpolicy
       namespace: {{ .Values.namespace }}
     spec:
-      action: ALLOW
+      action: {{ .Values.policyAction }}
       rules:
       - from:
         - source:
